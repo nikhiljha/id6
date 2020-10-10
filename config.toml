@@ -1,0 +1,13 @@
+# Logging and admin configuration.
+# Channel ID to send logs & manage the bot.
+channel_id = 746867420072771690
+
+# Information about verification.
+# Base web URL (proxy it through keycloak gatekeeper).
+base_url = "http://localhost:8080/"
+# Guild ID to act in (currently an unused config option- just make the bot private).
+guild_id = 746867420072771687
+# Role ID to assign to people who verify themselves.
+role_id = 764325476977868860
+# Message to listen to reactions on.
+msg_id = 764369028248371271

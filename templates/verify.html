@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Link Your {{service}} Account</title>
+</head>
+<body>
+    <p>
+        You are about to link your Discord account (<b>{{discord_name}}</b>) to your {{service}} account
+        (<b>{{external_name}}</b>). This will give you access to more channels in the OCF Discord server.
+    </p>
+    <form action="/verify/{{token}}" method="post">
+        <input type="submit" value="Confirm">
+    </form>
+</body>
+</html>
