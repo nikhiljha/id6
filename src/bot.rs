@@ -78,7 +78,7 @@ impl EventHandler for Handler {
         ).await.expect("unable to get member who reacted");
         if reaction.message_id == self.config.msg_id {
             for x in member.roles(&ctx).await.expect("unable to get member roles") {
-                if x.id.0 == RoleId(data.config.role_id).0 {
+                if x.id.0 == RoleId(self.config.role_id).0 {
                     return;
                 }
             }
