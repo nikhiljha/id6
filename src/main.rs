@@ -11,6 +11,8 @@ use std::io::Read;
 
 use crate::bot::Handler;
 use crate::bot::DatabaseContainer;
+use native_tls::{Certificate, TlsConnector};
+use postgres_native_tls::MakeTlsConnector;
 
 mod routes;
 mod db;
@@ -53,9 +55,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await
         .expect("Unable to create Discord client.");
 
+    // TLS for postgres
+    let connector = TlsConnector::builder()
+        .danger_accept_invalid_certs(true)
+        .danger_accept_invalid_hostnames(true)
+        .build()?;
+    let connector = MakeTlsConnector::new(connector);
+
     // postgres database
+    let connstring = env::var("POSTGRES_CONN")
+        .expect("Could not read POSTGRES_CONN from environment, is it set?");
     let (pg, connection) =
-        tokio_postgres::connect("host=localhost user=postgres password=hello", tokio_postgres::NoTls)
+        tokio_postgres::connect(&connstring, connector)
             .await
             .expect("Unable to connect to configured database.");
     tokio::spawn(async move {

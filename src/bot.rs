@@ -2,7 +2,7 @@ use crate::{Config, routes};
 use std::sync::Arc;
 use serenity::static_assertions::_core::sync::atomic::{Ordering, AtomicBool};
 use serenity::client::{Context, EventHandler};
-use serenity::model::id::GuildId;
+use serenity::model::id::{GuildId, RoleId};
 use serenity::async_trait;
 use std::thread;
 use actix_web::{HttpServer, web, App};
@@ -67,7 +67,7 @@ impl EventHandler for Handler {
     }
 
     async fn guild_member_addition(&self, ctx: Context, _guild_id: GuildId, member: Member) {
-        Handler::send_verification_dm(&ctx, &_guild_id, &member).await;
+        Handler::send_verification_dm(&self, &ctx, &_guild_id, &member).await;
     }
 
     async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
@@ -77,7 +77,13 @@ impl EventHandler for Handler {
             reaction.user(&ctx).await.expect("unable to get user who reacted"),
         ).await.expect("unable to get member who reacted");
         if reaction.message_id == self.config.msg_id {
+            for x in member.roles(&ctx).await.expect("unable to get member roles") {
+                if x.id.0 == RoleId(data.config.role_id).0 {
+                    return;
+                }
+            }
             Handler::send_verification_dm(
+                &self,
                 &ctx,
                 &gid,
                 &member,
@@ -87,7 +93,7 @@ impl EventHandler for Handler {
 }
 
 impl Handler {
-    async fn send_verification_dm(ctx: &Context, _guild_id: &GuildId, member: &Member) {
+    async fn send_verification_dm(&self, ctx: &Context, _guild_id: &GuildId, member: &Member) {
         let data = ctx.data.read().await;
         let pg_client = match data.get::<DatabaseContainer>() {
             Some(v) => v,
@@ -103,7 +109,7 @@ impl Handler {
             "INSERT INTO verifications (uuid, name, guild, token, completed) VALUES ($1, $2, $3, $4, $5)",
             &[&member.user.id.to_string(), &member.user.name, &_guild_id.to_string(), &token.to_string(), &false],
         ).await.expect("Unable to write to database.");
-        let url = format!("https://discord.ocf.berkeley.edu/verify/{}", token.to_string());
+        let url = format!("{}/verify/{}", self.config.base_url, token.to_string());
 
         let dm = member.user.dm(&ctx, |m| {
             m.content(format!("Welcome to the OCF Discord Server! To see every channel, you'll need to \
